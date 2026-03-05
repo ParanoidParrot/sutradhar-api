@@ -1,10 +1,6 @@
 {
-  "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "./Dockerfile"
-  },
   "deploy": {
     "healthcheckPath": "/health",
-    "restartPolicyType": "ON_FAILURE"
+    "healthcheckTimeout": 30
   }
 }
