@@ -1,0 +1,13 @@
+{
+  "scriptures": [
+    {
+      "id": "ramayana",
+      "name": "Ramayana",
+      "description": "The epic journey of Rama — dharma, devotion and the triumph of good over evil",
+      "pinecone_namespace": "ramayana",
+      "default_storyteller": "valmiki",
+      "available_storytellers": ["valmiki"],
+      "active": true
+    }
+  ]
+}

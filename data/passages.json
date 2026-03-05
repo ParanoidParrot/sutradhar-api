@@ -1,0 +1,212 @@
+[
+  {
+    "id": "p001",
+    "text": "Rama is the seventh avatar of Lord Vishnu and the hero of the Ramayana. He is the eldest son of King Dasharatha of Ayodhya and Queen Kaushalya. Rama is celebrated for his righteousness, devotion to dharma, and his role as the ideal man (Maryada Purushottam).",
+    "kanda": "Bala Kanda",
+    "characters": ["Rama", "Dasharatha", "Kaushalya"],
+    "topic": "Rama's identity and character"
+  },
+  {
+    "id": "p002",
+    "text": "King Dasharatha of Ayodhya had three wives: Kaushalya, Kaikeyi, and Sumitra. He had four sons — Rama (born to Kaushalya), Bharata (born to Kaikeyi), and the twins Lakshmana and Shatrughna (born to Sumitra). The sons were born after a great yajna called Putrakameshti performed by sage Rishyashringa.",
+    "kanda": "Bala Kanda",
+    "characters": ["Dasharatha", "Kaushalya", "Kaikeyi", "Sumitra", "Rama", "Bharata", "Lakshmana", "Shatrughna"],
+    "topic": "Birth of Rama and his brothers"
+  },
+  {
+    "id": "p003",
+    "text": "Sita is the daughter of King Janaka of Mithila and the wife of Rama. She was not born of a woman but was found in a furrow of a field while King Janaka was ploughing, making her an earth-born daughter (Bhumija). Sita is the avatar of Goddess Lakshmi and is revered as the ideal of womanly virtue and devotion.",
+    "kanda": "Bala Kanda",
+    "characters": ["Sita", "Janaka"],
+    "topic": "Sita's birth and identity"
+  },
+  {
+    "id": "p004",
+    "text": "Sita's swayamvara required suitors to lift and string the mighty bow of Lord Shiva, known as Pinaka. Many kings and princes tried and failed. Rama, guided by sage Vishwamitra, not only lifted the bow but strung it so powerfully that it broke in two. This feat won him Sita's hand in marriage.",
+    "kanda": "Bala Kanda",
+    "characters": ["Rama", "Sita", "Janaka", "Vishwamitra"],
+    "topic": "Rama breaks Shiva's bow and wins Sita"
+  },
+  {
+    "id": "p005",
+    "text": "Queen Kaikeyi, influenced by her maidservant Manthara, demanded that King Dasharatha honour two boons he had previously promised her. She demanded that her son Bharata be crowned king instead of Rama, and that Rama be exiled to the Dandaka forest for fourteen years. Dasharatha, bound by his word, was devastated but could not refuse.",
+    "kanda": "Ayodhya Kanda",
+    "characters": ["Kaikeyi", "Manthara", "Dasharatha", "Rama", "Bharata"],
+    "topic": "Kaikeyi's boons and Rama's exile"
+  },
+  {
+    "id": "p006",
+    "text": "Rama accepted his exile without complaint, seeing it as his duty to uphold his father's honour. Sita insisted on accompanying Rama into the forest despite his protests, saying a wife's place is beside her husband. Lakshmana also refused to stay behind and joined them, out of his deep devotion and love for Rama.",
+    "kanda": "Ayodhya Kanda",
+    "characters": ["Rama", "Sita", "Lakshmana", "Dasharatha"],
+    "topic": "Rama, Sita and Lakshmana go to forest"
+  },
+  {
+    "id": "p007",
+    "text": "King Dasharatha could not bear the separation from his beloved son Rama. Stricken with grief, he passed away shortly after Rama's departure, uttering Rama's name. His death was also seen as the fulfillment of an earlier curse by the blind parents of Shravan Kumar, whom Dasharatha had accidentally killed.",
+    "kanda": "Ayodhya Kanda",
+    "characters": ["Dasharatha", "Rama"],
+    "topic": "Death of King Dasharatha"
+  },
+  {
+    "id": "p008",
+    "text": "Bharata refused to accept the throne and was deeply angered by his mother Kaikeyi's actions. He went to the forest to beg Rama to return. Rama refused, insisting on honouring their father's word. Bharata then took Rama's sandals (padukas) back to Ayodhya and placed them on the throne, ruling only as Rama's representative.",
+    "kanda": "Ayodhya Kanda",
+    "characters": ["Bharata", "Rama", "Kaikeyi"],
+    "topic": "Bharata's devotion and Rama's padukas"
+  },
+  {
+    "id": "p009",
+    "text": "Surpanakha was the sister of Ravana. She encountered Rama and Lakshmana in the forest and was attracted to Rama. When she threatened Sita out of jealousy, Lakshmana cut off her nose and ears. She went to Ravana and described Sita's beauty, inflaming his desire and setting in motion the abduction of Sita.",
+    "kanda": "Aranya Kanda",
+    "characters": ["Surpanakha", "Ravana", "Rama", "Lakshmana", "Sita"],
+    "topic": "Surpanakha and the events leading to Sita's abduction"
+  },
+  {
+    "id": "p010",
+    "text": "Ravana is the ten-headed demon king of Lanka. He was a great scholar, devotee of Lord Shiva, and a powerful ruler. Despite his intellect and devotion, his arrogance, lust, and adharma led to his downfall. He is considered the primary antagonist of the Ramayana.",
+    "kanda": "General",
+    "characters": ["Ravana"],
+    "topic": "Ravana's identity and character"
+  },
+  {
+    "id": "p011",
+    "text": "Ravana used the golden deer — actually the demon Maricha in disguise — to lure Rama away from Sita. When Sita insisted Lakshmana follow Rama, Lakshmana drew a protective line around the hut called the Lakshmana Rekha before leaving. Ravana then came disguised as a sage and abducted Sita when she crossed the line to offer him alms.",
+    "kanda": "Aranya Kanda",
+    "characters": ["Ravana", "Maricha", "Sita", "Rama", "Lakshmana"],
+    "topic": "Abduction of Sita"
+  },
+  {
+    "id": "p012",
+    "text": "Jatayu was an elderly vulture king and an old friend of King Dasharatha. He witnessed Ravana abducting Sita and bravely attacked Ravana to rescue her. Ravana cut off Jatayu's wings with his sword. Rama found the mortally wounded Jatayu who informed him of Sita's abduction before dying in Rama's arms.",
+    "kanda": "Aranya Kanda",
+    "characters": ["Jatayu", "Ravana", "Sita", "Rama", "Dasharatha"],
+    "topic": "Jatayu's sacrifice"
+  },
+  {
+    "id": "p013",
+    "text": "Hanuman is the son of Vayu (the wind god) and Anjana. He is a devout vanara (monkey) and one of the most important characters in the Ramayana. He is the greatest devotee of Rama, possessing immense strength, wisdom, and the ability to fly. Hanuman's devotion and service to Rama is the central theme of his character.",
+    "kanda": "Kishkindha Kanda",
+    "characters": ["Hanuman"],
+    "topic": "Hanuman's identity and character"
+  },
+  {
+    "id": "p014",
+    "text": "Rama and Lakshmana met Sugriva on the Rishyamukha mountain through Hanuman. Sugriva had been exiled by his brother Vali who had also taken his wife. Rama agreed to help Sugriva by killing Vali. In return, Sugriva promised to help Rama search for Sita using his vast army of vanaras.",
+    "kanda": "Kishkindha Kanda",
+    "characters": ["Rama", "Lakshmana", "Sugriva", "Hanuman", "Vali"],
+    "topic": "Alliance between Rama and Sugriva"
+  },
+  {
+    "id": "p015",
+    "text": "Rama shot Vali with an arrow while Vali was fighting Sugriva. Vali questioned the fairness of being shot from hiding. Rama explained that Vali had committed adharma by taking his brother's wife and kingdom. Vali accepted this and died, after which Sugriva was crowned king of Kishkindha.",
+    "kanda": "Kishkindha Kanda",
+    "characters": ["Rama", "Vali", "Sugriva"],
+    "topic": "Killing of Vali"
+  },
+  {
+    "id": "p016",
+    "text": "Hanuman leapt across the vast ocean from the southern tip of India to Lanka in a single bound to search for Sita. This great leap demonstrated his immense power as the son of the wind god. He overcame many obstacles including the demoness Surasa and the shadow-demon Simhika before reaching Lanka.",
+    "kanda": "Sundara Kanda",
+    "characters": ["Hanuman"],
+    "topic": "Hanuman's leap to Lanka"
+  },
+  {
+    "id": "p017",
+    "text": "Hanuman found Sita in the Ashoka grove (Ashokavana) in Lanka, where she was kept under guard by Ravana's demonesses. She sat beneath an Ashoka tree, grief-stricken but firm in her devotion to Rama. Hanuman presented Rama's ring to her as proof of his identity and brought her Rama's message of hope.",
+    "kanda": "Sundara Kanda",
+    "characters": ["Hanuman", "Sita", "Ravana"],
+    "topic": "Hanuman finds Sita in Ashokavana"
+  },
+  {
+    "id": "p018",
+    "text": "After meeting Sita, Hanuman allowed himself to be captured by Ravana's son Indrajit. Brought before Ravana, Hanuman boldly warned him to return Sita or face destruction. Ravana ordered Hanuman's tail to be set on fire. Hanuman used his burning tail to set Lanka ablaze before extinguishing it and returning to Rama.",
+    "kanda": "Sundara Kanda",
+    "characters": ["Hanuman", "Ravana", "Indrajit", "Sita"],
+    "topic": "Hanuman burns Lanka"
+  },
+  {
+    "id": "p019",
+    "text": "The vanara army built a great bridge across the ocean to Lanka, called Rama Setu or Nala Setu. The bridge was constructed by the architect vanara Nala, son of the divine architect Vishwakarma. The vanaras floated stones on the ocean by writing Rama's name on them, and the stones miraculously floated.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Nala", "Rama", "Hanuman", "Sugriva"],
+    "topic": "Construction of the bridge to Lanka"
+  },
+  {
+    "id": "p020",
+    "text": "Vibhishana was Ravana's younger brother and a righteous man. He repeatedly urged Ravana to return Sita to Rama. When Ravana refused, Vibhishana defected and joined Rama's side. Rama welcomed him and promised to make him king of Lanka after defeating Ravana.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Vibhishana", "Ravana", "Rama"],
+    "topic": "Vibhishana joins Rama"
+  },
+  {
+    "id": "p021",
+    "text": "Indrajit, also known as Meghanada, was Ravana's powerful son who had defeated Indra in battle. He was a formidable warrior who used Brahmastra and other divine weapons. He rendered Rama and Lakshmana unconscious using Nagastra — serpent arrows. Garuda, the divine eagle, came and freed them from the serpent bonds.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Indrajit", "Ravana", "Rama", "Lakshmana"],
+    "topic": "Indrajit's power in battle"
+  },
+  {
+    "id": "p022",
+    "text": "When Lakshmana was gravely wounded by Indrajit's Shakti weapon, only the Sanjeevani herb from the Himalayan mountain Dronagiri could save him. Hanuman flew to the Himalayas but could not identify the herb, so he lifted the entire mountain and carried it back to Lanka in time to save Lakshmana's life.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Hanuman", "Lakshmana", "Indrajit"],
+    "topic": "Hanuman carries the Sanjeevani mountain"
+  },
+  {
+    "id": "p023",
+    "text": "The final battle between Rama and Ravana was fierce and prolonged. Every head Rama cut off was replaced by another. Finally, sage Agastya revealed the Aditya Hridayam — a hymn to the Sun god. Rama then used the Brahmastra given by Agastya to shoot a divine arrow into Ravana's navel, where his life force resided, finally killing him.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Rama", "Ravana", "Agastya"],
+    "topic": "Killing of Ravana"
+  },
+  {
+    "id": "p024",
+    "text": "After Ravana's death, Rama asked Sita to undergo Agni Pariksha — a trial by fire — to prove her purity during her captivity in Lanka. Sita entered the fire, and Agni, the fire god, returned her unharmed, declaring her purity. This was a painful moment but ultimately established Sita's honour before the world.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Rama", "Sita", "Agni"],
+    "topic": "Sita's Agni Pariksha"
+  },
+  {
+    "id": "p025",
+    "text": "After fourteen years of exile and the defeat of Ravana, Rama returned to Ayodhya with Sita, Lakshmana, Hanuman, Sugriva and the vanara army in the divine Pushpaka Vimana. The city was lit with lamps to welcome them. Rama was crowned king of Ayodhya in a grand ceremony, an event celebrated as Diwali.",
+    "kanda": "Uttara Kanda",
+    "characters": ["Rama", "Sita", "Lakshmana", "Hanuman", "Sugriva", "Bharata"],
+    "topic": "Rama's return and coronation — Ram Rajya"
+  },
+  {
+    "id": "p026",
+    "text": "Lakshmana is considered the avatar of Adishesha, the divine serpent on whom Vishnu rests. His devotion to Rama is unparalleled — he slept very little during the entire fourteen years of exile, standing guard. His wife Urmila waited faithfully in Ayodhya, sleeping on his behalf so Lakshmana could remain awake.",
+    "kanda": "General",
+    "characters": ["Lakshmana", "Urmila", "Rama"],
+    "topic": "Lakshmana's devotion and sacrifice"
+  },
+  {
+    "id": "p027",
+    "text": "The Ramayana was originally composed by sage Valmiki in Sanskrit and is called the Adi Kavya or the first poem. It consists of 24,000 verses spread across seven kandas: Bala, Ayodhya, Aranya, Kishkindha, Sundara, Yuddha, and Uttara Kanda. Valmiki is considered the first poet (Adi Kavi) of Sanskrit literature.",
+    "kanda": "General",
+    "characters": ["Valmiki"],
+    "topic": "About the Ramayana and Valmiki"
+  },
+  {
+    "id": "p028",
+    "text": "The Ramayana has many regional versions across India and Southeast Asia. Tulsidas wrote Ramcharitmanas in Awadhi Hindi, which is widely read in North India. Kambar wrote Kamba Ramayanam in Tamil. Each regional version carries the same core story but with unique cultural flavour and interpretation.",
+    "kanda": "General",
+    "characters": ["Valmiki", "Tulsidas", "Kambar"],
+    "topic": "Regional versions of the Ramayana"
+  },
+  {
+    "id": "p029",
+    "text": "Shabari was an elderly devotee of Rama who lived as an ascetic in the forest, waiting for Rama's arrival as prophesied by her guru Matanga. When Rama visited her, she offered him berries she had tasted to ensure they were sweet. Rama ate them with love, valuing her devotion above all formality. Her story represents pure, selfless bhakti.",
+    "kanda": "Aranya Kanda",
+    "characters": ["Shabari", "Rama", "Lakshmana"],
+    "topic": "Shabari's devotion to Rama"
+  },
+  {
+    "id": "p030",
+    "text": "Kumbhakarna was Ravana's giant brother who slept for six months at a time. He was awakened to fight in the war against Rama's army. Despite personally disagreeing with Ravana's adharma in abducting Sita, he chose to fight for his brother out of loyalty. He was eventually slain by Rama himself in battle.",
+    "kanda": "Yuddha Kanda",
+    "characters": ["Kumbhakarna", "Ravana", "Rama"],
+    "topic": "Kumbhakarna in the war"
+  }
+]
