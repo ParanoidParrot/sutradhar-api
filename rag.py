@@ -21,8 +21,12 @@ SARVAM_API_KEY  = os.getenv("SARVAM_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX  = os.getenv("PINECONE_INDEX", "sutradhar")
 
-sarvam_client = SarvamAI(api_subscription_key=SARVAM_API_KEY)
-pc            = Pinecone(api_key=PINECONE_API_KEY)
+def get_sarvam_client():
+    return SarvamAI(api_subscription_key=os.environ.get("SARVAM_API_KEY"))
+
+def get_pc():
+    return Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+
 
 # ── Load config ───────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -65,12 +69,12 @@ TTS_VOICES = {
 
 # ── Pinecone index ────────────────────────────────────────────────────────────
 def get_index():
-    return pc.Index(PINECONE_INDEX)
+    return get_pc().Index(PINECONE_INDEX)
 
 
 # ── Embed text via Pinecone inference ─────────────────────────────────────────
 def embed_text(text: str) -> list[float]:
-    result = pc.inference.embed(
+    result = get_pc().inference.embed(
         model="multilingual-e5-large",
         inputs=[text],
         parameters={"input_type": "query"}
@@ -199,7 +203,7 @@ def text_to_speech(text: str, language: str = "English") -> dict:
         text = text[:2490] + "..."
 
     try:
-        response     = sarvam_client.text_to_speech.convert(
+        response     = get_sarvam_client().text_to_speech.convert(
             text=text,
             target_language_code=lang_code,
             model="bulbul:v3",
