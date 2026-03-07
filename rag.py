@@ -21,12 +21,8 @@ SARVAM_API_KEY  = os.getenv("SARVAM_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX  = os.getenv("PINECONE_INDEX", "sutradhar")
 
-def get_sarvam_client():
-    return SarvamAI(api_subscription_key=os.environ.get("SARVAM_API_KEY"))
-
-def get_pc():
-    return Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-
+sarvam_client = SarvamAI(api_subscription_key=SARVAM_API_KEY)
+pc            = Pinecone(api_key=PINECONE_API_KEY)
 
 # ── Load config ───────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -69,12 +65,12 @@ TTS_VOICES = {
 
 # ── Pinecone index ────────────────────────────────────────────────────────────
 def get_index():
-    return get_pc().Index(PINECONE_INDEX)
+    return pc.Index(PINECONE_INDEX)
 
 
 # ── Embed text via Pinecone inference ─────────────────────────────────────────
 def embed_text(text: str) -> list[float]:
-    result = get_pc().inference.embed(
+    result = pc.inference.embed(
         model="multilingual-e5-large",
         inputs=[text],
         parameters={"input_type": "query"}
@@ -203,7 +199,7 @@ def text_to_speech(text: str, language: str = "English") -> dict:
         text = text[:2490] + "..."
 
     try:
-        response     = get_sarvam_client().text_to_speech.convert(
+        response     = sarvam_client.text_to_speech.convert(
             text=text,
             target_language_code=lang_code,
             model="bulbul:v3",
@@ -230,8 +226,10 @@ def ask(
         if lang_code != "en-IN":
             query_en = translate_text(query, source_lang=lang_code, target_lang="en-IN")
 
-        # Step 2 — Retrieve relevant passages
-        passages = retrieve_passages(query_en, scripture=scripture)
+        # Step 2 — Retrieve relevant passages (filter low-relevance)
+        RELEVANCE_THRESHOLD = 0.45
+        all_passages = retrieve_passages(query_en, scripture=scripture)
+        passages = [p for p in all_passages if p["score"] >= RELEVANCE_THRESHOLD]
 
         # Step 3 — Generate answer in English
         answer_en = generate_answer(query_en, passages, storyteller_id=storyteller)
