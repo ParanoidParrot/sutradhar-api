@@ -227,7 +227,7 @@ def ask(
             query_en = translate_text(query, source_lang=lang_code, target_lang="en-IN")
 
         # Step 2 — Retrieve relevant passages (filter low-relevance)
-        RELEVANCE_THRESHOLD = 0.45
+        RELEVANCE_THRESHOLD = 0.80
         all_passages = retrieve_passages(query_en, scripture=scripture)
         passages = [p for p in all_passages if p["score"] >= RELEVANCE_THRESHOLD]
 
@@ -238,6 +238,17 @@ def ask(
         answer = answer_en
         if lang_code != "en-IN":
             answer = translate_text(answer_en, source_lang="en-IN", target_lang=lang_code)
+
+        # Hide passages if answer indicates the question is out of scope
+        IRRELEVANCE_PHRASES = [
+            "does not mention", "not mentioned", "not part of", "outside the scope",
+            "not related to", "cannot answer", "no information", "not found in",
+            "beyond the scope", "not in the ramayana", "not covered", 
+            "question appears to be incomplete or unclear"
+        ]
+        answer_lower = answer_en.lower()
+        if any(phrase in answer_lower for phrase in IRRELEVANCE_PHRASES):
+            passages = []
 
         return {
             "answer":      answer,
