@@ -141,7 +141,13 @@ def generate_answer(query: str, passages: list[dict], storyteller_id: str) -> st
 
     response = requests.post(url, headers=headers, json=payload)
     response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"].strip()
+    answer = response.json()["choices"][0]["message"]["content"].strip()
+
+    # Strip <think>...</think> chain-of-thought tags if present
+    import re
+    answer = re.sub(r'<think>.*?</think>', '', answer, flags=re.DOTALL).strip()
+
+    return answer
 
 
 # ── Sarvam Translate ──────────────────────────────────────────────────────────
@@ -243,8 +249,7 @@ def ask(
         IRRELEVANCE_PHRASES = [
             "does not mention", "not mentioned", "not part of", "outside the scope",
             "not related to", "cannot answer", "no information", "not found in",
-            "beyond the scope", "not in the ramayana", "not covered", 
-            "question appears to be incomplete or unclear"
+            "beyond the scope", "not in the ramayana", "not covered"
         ]
         answer_lower = answer_en.lower()
         if any(phrase in answer_lower for phrase in IRRELEVANCE_PHRASES):
