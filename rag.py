@@ -145,11 +145,10 @@ def generate_answer(query: str, passages: list[dict], storyteller_id: str) -> st
 
     # Strip <think>...</think> chain-of-thought tags if present
     import re
+    # Handle both closed and unclosed think tags
     answer = re.sub(r'<think>.*?</think>', '', answer, flags=re.DOTALL).strip()
-    # Also strip opening <think> tag without closing tag
-    answer = re.sub(r'<think>.*', '', answer, flags=re.DOTALL).strip()
-    # Strip any remaining XML-style tags
-    answer = re.sub(r'<[^>]+>', '', answer).strip()
+    # Handle unclosed <think> tag - remove from <think> to end of first line only
+    answer = re.sub(r'^<think>[^]*?', '', answer, flags=re.MULTILINE).strip()
 
     return answer
 
