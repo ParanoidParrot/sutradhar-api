@@ -146,6 +146,10 @@ def generate_answer(query: str, passages: list[dict], storyteller_id: str) -> st
     # Strip <think>...</think> chain-of-thought tags if present
     import re
     answer = re.sub(r'<think>.*?</think>', '', answer, flags=re.DOTALL).strip()
+    # Also strip opening <think> tag without closing tag
+    answer = re.sub(r'<think>.*', '', answer, flags=re.DOTALL).strip()
+    # Strip any remaining XML-style tags
+    answer = re.sub(r'<[^>]+>', '', answer).strip()
 
     return answer
 
@@ -249,7 +253,7 @@ def ask(
         IRRELEVANCE_PHRASES = [
             "does not mention", "not mentioned", "not part of", "outside the scope",
             "not related to", "cannot answer", "no information", "not found in",
-            "beyond the scope", "not in the ramayana", "not covered"
+            "beyond the scope", "not in the ramayana", "not covered", "question is unclear"
         ]
         answer_lower = answer_en.lower()
         if any(phrase in answer_lower for phrase in IRRELEVANCE_PHRASES):
