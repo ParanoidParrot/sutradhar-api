@@ -1,13 +1,16 @@
 """
 ingest.py
 Document ingestion pipeline for Sutradhar.
-Supports: PDF, plain text (.txt), Word (.docx), web URLs
-Chunks documents, embeds via Pinecone inference, upserts to Pinecone.
+Supports: PDF (digital + scanned via OCR), plain text (.txt), Word (.docx), web URLs
+
+Extraction strategy for PDFs:
+  1. Try pymupdf (fast, handles digital PDFs + Indic Unicode)
+  2. If no text extracted → scanned PDF → OCR via Tesseract (capped at OCR_PAGE_LIMIT pages)
 
 Usage:
   python3 ingest.py --file path/to/file.pdf --scripture ramayana --source "Valmiki Ramayana Vol 1" --kanda "Bala Kanda"
   python3 ingest.py --url https://example.com/ramayana --scripture ramayana --source "Sacred Texts"
-  python3 ingest.py --seed  ← seeds from data/passages.json (same as prototype)
+  python3 ingest.py --seed  ← seeds from data/passages.json
 """
 
 import os
@@ -26,30 +29,79 @@ BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
 
-CHUNK_SIZE    = 400   # words per chunk
-CHUNK_OVERLAP = 50    # words overlap between chunks
-BATCH_SIZE    = 50    # vectors per Pinecone upsert batch (reduced from 90)
-EMBED_BATCH   = 50    # chunks per Pinecone inference embed call (new — avoids 413)
+CHUNK_SIZE     = 400   # words per chunk
+CHUNK_OVERLAP  = 50    # words overlap between chunks
+BATCH_SIZE     = 50    # vectors per Pinecone upsert batch
+EMBED_BATCH    = 50    # chunks per Pinecone inference embed call
+OCR_PAGE_LIMIT = 50    # max pages to OCR for scanned PDFs
 
 
 # ── Text extraction ───────────────────────────────────────────────────────────
-def extract_from_pdf(path: str) -> str:
+
+def extract_from_pdf(path: str) -> tuple[str, str]:
+    """
+    Extract text from PDF.
+    Returns (text, method) where method is 'digital' or 'ocr'.
+    Raises warning if OCR page limit is hit.
+    """
+    import fitz  # pymupdf
+
+    doc        = fitz.open(path)
+    total_pages = len(doc)
+    pages_text  = []
+
+    # Step 1 — try digital extraction
+    for page in doc:
+        pages_text.append(page.get_text())
+
+    extracted = "\n".join(pages_text).strip()
+
+    if extracted:
+        print(f"  PDF: digital text extracted from {total_pages} pages")
+        return extracted, "digital"
+
+    # Step 2 — no text found, try OCR
+    print(f"  PDF: no digital text found — scanned PDF detected")
+    print(f"  OCR: processing up to {OCR_PAGE_LIMIT} of {total_pages} pages")
+
+    if total_pages > OCR_PAGE_LIMIT:
+        print(f"  ⚠️  WARNING: PDF has {total_pages} pages but OCR is capped at {OCR_PAGE_LIMIT}.")
+        print(f"  ⚠️  To ingest the full document, split it into {OCR_PAGE_LIMIT}-page chunks first.")
+
     try:
-        import PyPDF2
-        text = []
-        with open(path, "rb") as f:
-            reader = PyPDF2.PdfReader(f)
-            for page in reader.pages:
-                text.append(page.extract_text() or "")
-        return "\n".join(text)
+        import pytesseract
+        from PIL import Image
+        import io
+
+        ocr_text  = []
+        pages_to_ocr = min(total_pages, OCR_PAGE_LIMIT)
+
+        for page_num in range(pages_to_ocr):
+            page = doc[page_num]
+            # Render page at 300 DPI for good OCR accuracy
+            mat  = fitz.Matrix(300 / 72, 300 / 72)
+            pix  = page.get_pixmap(matrix=mat)
+            img  = Image.open(io.BytesIO(pix.tobytes("png")))
+            # Use multiple languages: English + all supported Indian languages
+            lang_str = "eng+hin+tam+tel+kan+mal+ben+mar+guj+pan+ori"
+            text = pytesseract.image_to_string(img, lang=lang_str)
+            if text.strip():
+                ocr_text.append(text)
+            print(f"  OCR: page {page_num + 1}/{pages_to_ocr} done")
+
+        result = "\n".join(ocr_text).strip()
+        if not result:
+            raise ValueError("OCR ran but extracted no text. The PDF may contain only images or graphics.")
+        return result, "ocr"
+
     except ImportError:
-        raise ImportError("Run: pip install pypdf2")
+        raise ImportError("pytesseract or Pillow not installed. Run: pip install pytesseract Pillow")
 
 
 def extract_from_docx(path: str) -> str:
     try:
         from docx import Document
-        doc   = Document(path)
+        doc = Document(path)
         return "\n".join([p.text for p in doc.paragraphs if p.text.strip()])
     except ImportError:
         raise ImportError("Run: pip install python-docx")
@@ -78,13 +130,40 @@ def extract_text(source: str, is_url: bool = False) -> str:
         return extract_from_url(source)
     ext = os.path.splitext(source)[1].lower()
     if ext == ".pdf":
-        return extract_from_pdf(source)
+        text, method = extract_from_pdf(source)
+        return text
     elif ext == ".docx":
         return extract_from_docx(source)
     elif ext == ".txt":
         return extract_from_txt(source)
     else:
         raise ValueError(f"Unsupported file type: {ext}. Supported: .pdf, .txt, .docx")
+
+
+def extract_text_with_meta(source: str, is_url: bool = False) -> dict:
+    """Extended version of extract_text that also returns extraction metadata."""
+    if is_url:
+        return {"text": extract_from_url(source), "method": "url", "ocr_capped": False}
+    ext = os.path.splitext(source)[1].lower()
+    if ext == ".pdf":
+        import fitz
+        doc         = fitz.open(source)
+        total_pages = len(doc)
+        text, method = extract_from_pdf(source)
+        ocr_capped  = method == "ocr" and total_pages > OCR_PAGE_LIMIT
+        return {
+            "text":        text,
+            "method":      method,
+            "total_pages": total_pages,
+            "ocr_capped":  ocr_capped,
+            "ocr_limit":   OCR_PAGE_LIMIT,
+        }
+    elif ext == ".docx":
+        return {"text": extract_from_docx(source), "method": "docx", "ocr_capped": False}
+    elif ext == ".txt":
+        return {"text": extract_from_txt(source), "method": "txt", "ocr_capped": False}
+    else:
+        raise ValueError(f"Unsupported file type: {ext}")
 
 
 # ── Chunking ──────────────────────────────────────────────────────────────────
@@ -101,19 +180,19 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
     return chunks
 
 
-# ── Pinecone embedding — batched to avoid 413 ─────────────────────────────────
+# ── Pinecone embedding — batched to avoid 413 ────────────────────────────────
 def embed_chunks(chunks: list[str]) -> list[list[float]]:
-    """Embed chunks in small batches to avoid Pinecone inference request size limit."""
     all_vectors = []
+    total_batches = -(-len(chunks) // EMBED_BATCH)  # ceiling division
     for i in range(0, len(chunks), EMBED_BATCH):
-        batch = chunks[i:i + EMBED_BATCH]
+        batch  = chunks[i:i + EMBED_BATCH]
         result = pc.inference.embed(
             model="multilingual-e5-large",
             inputs=batch,
             parameters={"input_type": "passage"}
         )
         all_vectors.extend([r.values for r in result])
-        print(f"  Embedded batch {i // EMBED_BATCH + 1}/{-(-len(chunks) // EMBED_BATCH)} ({len(batch)} chunks)")
+        print(f"  Embedded batch {i // EMBED_BATCH + 1}/{total_batches} ({len(batch)} chunks)")
     return all_vectors
 
 
@@ -124,12 +203,12 @@ def upsert_to_pinecone(
     source:    str,
     kanda:     str = "",
     topic:     str = ""
-):
+) -> int:
     index   = pc.Index(PINECONE_INDEX)
     vectors = embed_chunks(chunks)
 
     records = []
-    for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
+    for chunk, vector in zip(chunks, vectors):
         records.append({
             "id":     str(uuid.uuid4()),
             "values": vector,
@@ -141,11 +220,11 @@ def upsert_to_pinecone(
             }
         })
 
-    # Upsert in batches
+    total_batches = -(-len(records) // BATCH_SIZE)
     for i in range(0, len(records), BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
         index.upsert(vectors=batch, namespace=namespace)
-        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{-(-len(records) // BATCH_SIZE)} ({len(batch)} vectors)")
+        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{total_batches} ({len(batch)} vectors)")
 
     return len(records)
 
@@ -178,10 +257,11 @@ def seed_from_json():
             }
         })
 
+    total_batches = -(-len(records) // BATCH_SIZE)
     for i in range(0, len(records), BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
         index.upsert(vectors=batch, namespace="ramayana")
-        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{-(-len(records) // BATCH_SIZE)} ({len(batch)} vectors)")
+        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{total_batches} ({len(batch)} vectors)")
 
     print(f"\n✅ Seeded {len(records)} passages into Pinecone namespace: ramayana")
 
@@ -189,13 +269,13 @@ def seed_from_json():
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     parser = argparse.ArgumentParser(description="Sutradhar document ingestion")
-    parser.add_argument("--file",       help="Path to PDF, TXT or DOCX file")
-    parser.add_argument("--url",        help="Web URL to ingest")
-    parser.add_argument("--scripture",  default="ramayana", help="Scripture namespace (default: ramayana)")
-    parser.add_argument("--source",     default="", help="Source name e.g. 'Valmiki Ramayana Vol 1'")
-    parser.add_argument("--kanda",      default="", help="Kanda/section name")
-    parser.add_argument("--topic",      default="", help="Topic tag")
-    parser.add_argument("--seed",       action="store_true", help="Seed from data/passages.json")
+    parser.add_argument("--file",      help="Path to PDF, TXT or DOCX file")
+    parser.add_argument("--url",       help="Web URL to ingest")
+    parser.add_argument("--scripture", default="ramayana")
+    parser.add_argument("--source",    default="")
+    parser.add_argument("--kanda",     default="")
+    parser.add_argument("--topic",     default="")
+    parser.add_argument("--seed",      action="store_true")
     args = parser.parse_args()
 
     with open(os.path.join(BASE_DIR, "scriptures.json")) as f:
@@ -219,9 +299,14 @@ def main():
     source    = args.url or args.file
 
     print(f"Extracting text from: {source}")
-    text   = extract_text(source, is_url=is_url)
-    print(f"Extracted {len(text.split())} words")
+    meta   = extract_text_with_meta(source, is_url=is_url)
+    text   = meta["text"]
 
+    if meta.get("ocr_capped"):
+        print(f"\n⚠️  OCR capped at {OCR_PAGE_LIMIT} pages (PDF has {meta['total_pages']} pages total)")
+        print(f"⚠️  Only the first {OCR_PAGE_LIMIT} pages were ingested\n")
+
+    print(f"Extracted {len(text.split())} words via {meta['method']}")
     print(f"Chunking into ~{CHUNK_SIZE} word chunks...")
     chunks = chunk_text(text)
     print(f"Created {len(chunks)} chunks")
@@ -239,6 +324,8 @@ def main():
     print(f"   Scripture : {args.scripture}")
     print(f"   Namespace : {namespace}")
     print(f"   Source    : {args.source or source}")
+    if meta.get("method") == "ocr":
+        print(f"   Method    : OCR (scanned PDF)")
 
 
 if __name__ == "__main__":

@@ -160,15 +160,38 @@ def export_documents(scripture: str = None, _admin=Depends(require_admin)):
 def _run_ingestion(job_id, tmp_path, ext, scripture, source, kanda, topic, filename, actor):
     try:
         update_job(job_id, status="processing", progress=40, message="Extracting text...")
-        text   = extract_text(tmp_path, is_url=False)
+        from ingest import extract_text_with_meta
+        meta   = extract_text_with_meta(tmp_path, is_url=False)
+        text   = meta["text"]
+
+        # Warn admin portal if OCR was capped
+        if meta.get("ocr_capped"):
+            update_job(
+                job_id, progress=45,
+                message=f"⚠️ Scanned PDF — OCR capped at {meta['ocr_limit']} of {meta['total_pages']} pages. Ingesting partial content."
+            )
+        elif meta.get("method") == "ocr":
+            update_job(job_id, progress=45, message=f"Scanned PDF detected — OCR complete ({meta['total_pages']} pages)")
+
         update_job(job_id, progress=55, message="Chunking document...")
         chunks = chunk_text(text)
+
+        if not chunks:
+            raise ValueError(
+                "No text could be extracted from this PDF. "
+                "It may be image-only or encrypted. "
+                "Try a different file or split into smaller parts."
+            )
+
         update_job(job_id, progress=65, message=f"Upserting {len(chunks)} chunks to Pinecone...")
         namespace = SCRIPTURES[scripture]["pinecone_namespace"]
         total  = upsert_to_pinecone(chunks=chunks, namespace=namespace, source=source, kanda=kanda, topic=topic)
         update_job(job_id, progress=90, message="Saving document record...")
         doc = add_document(source=source, scripture=scripture, kanda=kanda, topic=topic, chunk_count=total, doc_type="file")
-        update_job(job_id, status="done", progress=100, message=f"Done — {total} chunks ingested", chunk_count=total, doc_id=doc["id"])
+        done_msg = f"Done — {total} chunks ingested"
+        if meta.get("ocr_capped"):
+            done_msg += f" (⚠️ first {meta['ocr_limit']} pages only — split PDF for full ingestion)"
+        update_job(job_id, status="done", progress=100, message=done_msg, chunk_count=total, doc_id=doc["id"])
         activity_log("ingest_file", f"Ingested '{filename}' into {scripture} ({total} chunks)", actor=actor, meta={"doc_id": doc["id"], "chunks": total})
     except Exception as e:
         update_job(job_id, status="error", message=str(e))
