@@ -28,7 +28,8 @@ pc = Pinecone(api_key=PINECONE_API_KEY)
 
 CHUNK_SIZE    = 400   # words per chunk
 CHUNK_OVERLAP = 50    # words overlap between chunks
-BATCH_SIZE    = 90    # Pinecone upsert batch size
+BATCH_SIZE    = 50    # vectors per Pinecone upsert batch (reduced from 90)
+EMBED_BATCH   = 50    # chunks per Pinecone inference embed call (new — avoids 413)
 
 
 # ── Text extraction ───────────────────────────────────────────────────────────
@@ -65,7 +66,6 @@ def extract_from_url(url: str) -> str:
         response = requests.get(url, timeout=15)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
-        # Remove script and style tags
         for tag in soup(["script", "style", "nav", "footer", "header"]):
             tag.decompose()
         return soup.get_text(separator="\n", strip=True)
@@ -101,16 +101,23 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
     return chunks
 
 
-# ── Pinecone embedding + upsert ───────────────────────────────────────────────
+# ── Pinecone embedding — batched to avoid 413 ─────────────────────────────────
 def embed_chunks(chunks: list[str]) -> list[list[float]]:
-    result = pc.inference.embed(
-        model="multilingual-e5-large",
-        inputs=chunks,
-        parameters={"input_type": "passage"}
-    )
-    return [r.values for r in result]
+    """Embed chunks in small batches to avoid Pinecone inference request size limit."""
+    all_vectors = []
+    for i in range(0, len(chunks), EMBED_BATCH):
+        batch = chunks[i:i + EMBED_BATCH]
+        result = pc.inference.embed(
+            model="multilingual-e5-large",
+            inputs=batch,
+            parameters={"input_type": "passage"}
+        )
+        all_vectors.extend([r.values for r in result])
+        print(f"  Embedded batch {i // EMBED_BATCH + 1}/{-(-len(chunks) // EMBED_BATCH)} ({len(batch)} chunks)")
+    return all_vectors
 
 
+# ── Pinecone upsert — batched ─────────────────────────────────────────────────
 def upsert_to_pinecone(
     chunks:    list[str],
     namespace: str,
@@ -138,7 +145,7 @@ def upsert_to_pinecone(
     for i in range(0, len(records), BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
         index.upsert(vectors=batch, namespace=namespace)
-        print(f"  Upserted batch {i // BATCH_SIZE + 1} ({len(batch)} vectors)")
+        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{-(-len(records) // BATCH_SIZE)} ({len(batch)} vectors)")
 
     return len(records)
 
@@ -174,7 +181,7 @@ def seed_from_json():
     for i in range(0, len(records), BATCH_SIZE):
         batch = records[i:i + BATCH_SIZE]
         index.upsert(vectors=batch, namespace="ramayana")
-        print(f"  Upserted batch {i // BATCH_SIZE + 1} ({len(batch)} vectors)")
+        print(f"  Upserted batch {i // BATCH_SIZE + 1}/{-(-len(records) // BATCH_SIZE)} ({len(batch)} vectors)")
 
     print(f"\n✅ Seeded {len(records)} passages into Pinecone namespace: ramayana")
 
