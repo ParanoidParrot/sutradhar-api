@@ -6,7 +6,7 @@ import os
 import json
 import tempfile
 import threading
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -32,6 +32,11 @@ app = FastAPI(title="Sutradhar API", version="1.0.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
+
+# ── In-memory chunk assembly store ────────────────────────────────────────────
+# Maps upload_id -> { tmp_path, received_chunks, total_chunks, metadata }
+_chunk_uploads: dict = {}
+_chunk_lock = threading.Lock()
 
 
 # ── Models ─────────────────────────────────────────────────────────────────────
@@ -149,17 +154,16 @@ def get_documents(scripture: str = None, search: str = None, page: int = 1, page
 
 @app.get("/documents/export")
 def export_documents(scripture: str = None, _admin=Depends(require_admin)):
-    """Export all documents as JSON (admin downloads and converts to CSV client-side)."""
     docs = list_documents(scripture=scripture)
     return {"documents": docs, "total": len(docs)}
 
 def _run_ingestion(job_id, tmp_path, ext, scripture, source, kanda, topic, filename, actor):
     try:
-        update_job(job_id, status="processing", progress=10, message="Extracting text...")
+        update_job(job_id, status="processing", progress=40, message="Extracting text...")
         text   = extract_text(tmp_path, is_url=False)
-        update_job(job_id, progress=30, message="Chunking document...")
+        update_job(job_id, progress=55, message="Chunking document...")
         chunks = chunk_text(text)
-        update_job(job_id, progress=50, message=f"Upserting {len(chunks)} chunks to Pinecone...")
+        update_job(job_id, progress=65, message=f"Upserting {len(chunks)} chunks to Pinecone...")
         namespace = SCRIPTURES[scripture]["pinecone_namespace"]
         total  = upsert_to_pinecone(chunks=chunks, namespace=namespace, source=source, kanda=kanda, topic=topic)
         update_job(job_id, progress=90, message="Saving document record...")
@@ -172,6 +176,124 @@ def _run_ingestion(job_id, tmp_path, ext, scripture, source, kanda, topic, filen
         try: os.unlink(tmp_path)
         except: pass
 
+
+# ── Chunked upload endpoints ───────────────────────────────────────────────────
+
+@app.post("/documents/upload-init")
+async def upload_init(
+    filename: str = Form(...),
+    total_chunks: int = Form(...),
+    scripture: str = Form(default="ramayana"),
+    source: str = Form(default=""),
+    kanda: str = Form(default=""),
+    topic: str = Form(default=""),
+    admin=Depends(require_admin)
+):
+    """Step 1 — initialise a chunked upload session. Returns upload_id and job_id."""
+    import uuid
+    ext = os.path.splitext(filename)[1].lower()
+    if ext not in [".pdf", ".docx", ".txt"]:
+        raise HTTPException(400, f"Unsupported file type: {ext}")
+    if scripture not in SCRIPTURES:
+        raise HTTPException(400, f"Unknown scripture: {scripture}")
+
+    upload_id = str(uuid.uuid4())
+    tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext)
+    tmp.close()
+
+    job = create_job(filename=filename, scripture=scripture)
+
+    with _chunk_lock:
+        _chunk_uploads[upload_id] = {
+            "tmp_path":        tmp.name,
+            "ext":             ext,
+            "filename":        filename,
+            "scripture":       scripture,
+            "source":          source or filename,
+            "kanda":           kanda,
+            "topic":           topic,
+            "actor":           admin.get("sub", "admin"),
+            "job_id":          job["id"],
+            "total_chunks":    total_chunks,
+            "received_chunks": 0,
+        }
+
+    update_job(job["id"], status="uploading", progress=0, message=f"Receiving file (0/{total_chunks} chunks)...")
+    return {"upload_id": upload_id, "job_id": job["id"]}
+
+
+@app.post("/documents/upload-chunk")
+async def upload_chunk(
+    upload_id: str = Form(...),
+    chunk_index: int = Form(...),
+    chunk: UploadFile = File(...),
+    _admin=Depends(require_admin)
+):
+    """Step 2 — send one chunk. Repeat until all chunks sent."""
+    with _chunk_lock:
+        upload = _chunk_uploads.get(upload_id)
+        if not upload:
+            raise HTTPException(404, "Upload session not found. Re-initialise.")
+
+    chunk_bytes = await chunk.read()
+
+    with open(upload["tmp_path"], "ab") as f:
+        f.write(chunk_bytes)
+
+    with _chunk_lock:
+        _chunk_uploads[upload_id]["received_chunks"] += 1
+        received = _chunk_uploads[upload_id]["received_chunks"]
+        total    = _chunk_uploads[upload_id]["total_chunks"]
+
+    progress = int((received / total) * 40)  # upload phase = 0–40%
+    update_job(
+        upload["job_id"],
+        status="uploading",
+        progress=progress,
+        message=f"Receiving file ({received}/{total} chunks)..."
+    )
+    return {"received": received, "total": total}
+
+
+@app.post("/documents/upload-finalise")
+async def upload_finalise(
+    upload_id: str = Form(...),
+    _admin=Depends(require_admin)
+):
+    """Step 3 — call after all chunks sent. Kicks off ingestion background thread."""
+    with _chunk_lock:
+        upload = _chunk_uploads.pop(upload_id, None)
+    if not upload:
+        raise HTTPException(404, "Upload session not found or already finalised.")
+
+    received = upload["received_chunks"]
+    total    = upload["total_chunks"]
+    if received != total:
+        raise HTTPException(400, f"Incomplete upload: received {received}/{total} chunks.")
+
+    update_job(upload["job_id"], status="processing", progress=40, message="Upload complete. Starting ingestion...")
+
+    thread = threading.Thread(
+        target=_run_ingestion,
+        args=(
+            upload["job_id"],
+            upload["tmp_path"],
+            upload["ext"],
+            upload["scripture"],
+            upload["source"],
+            upload["kanda"],
+            upload["topic"],
+            upload["filename"],
+            upload["actor"],
+        ),
+        daemon=True
+    )
+    thread.start()
+
+    return {"job_id": upload["job_id"], "message": "Ingestion started", "filename": upload["filename"]}
+
+
+# ── Original single-shot upload (kept for small files ≤ 5MB) ──────────────────
 @app.post("/documents/upload")
 async def upload_document(file: UploadFile = File(...), scripture: str = Form(default="ramayana"), source: str = Form(default=""), kanda: str = Form(default=""), topic: str = Form(default=""), admin=Depends(require_admin)):
     filename = file.filename or "upload"
@@ -228,7 +350,6 @@ def remove_document(doc_id: str, admin=Depends(require_admin)):
 # ── Pinecone namespace management ──────────────────────────────────────────────
 @app.delete("/namespaces/{namespace}")
 def clear_namespace(namespace: str, admin=Depends(require_admin)):
-    """Delete ALL vectors in a Pinecone namespace. Irreversible."""
     try:
         from pinecone import Pinecone
         pc    = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
