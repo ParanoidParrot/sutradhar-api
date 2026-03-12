@@ -33,7 +33,7 @@ CHUNK_SIZE     = 400   # words per chunk
 CHUNK_OVERLAP  = 50    # words overlap between chunks
 BATCH_SIZE     = 50    # vectors per Pinecone upsert batch
 EMBED_BATCH    = 50    # chunks per Pinecone inference embed call
-OCR_PAGE_LIMIT = 50    # max pages to OCR for scanned PDFs
+OCR_PAGE_LIMIT = 20    # max pages to OCR for scanned PDFs
 
 
 # ── Text extraction ───────────────────────────────────────────────────────────
@@ -72,24 +72,35 @@ def extract_from_pdf(path: str) -> tuple[str, str]:
         import pytesseract
         from PIL import Image
         import io
+        from concurrent.futures import ThreadPoolExecutor, as_completed
 
-        ocr_text  = []
         pages_to_ocr = min(total_pages, OCR_PAGE_LIMIT)
+        lang_str     = "eng+hin+tam+tel+kan+mal+ben+mar+guj+pan+ori"
 
-        for page_num in range(pages_to_ocr):
-            page = doc[page_num]
-            # Render page at 300 DPI for good OCR accuracy
-            mat  = fitz.Matrix(300 / 72, 300 / 72)
+        def ocr_page(page_num):
+            # Each thread gets its own page render — fitz pages are not thread-safe
+            # so we re-open the doc per thread
+            _doc = fitz.open(path)
+            page = _doc[page_num]
+            mat  = fitz.Matrix(150 / 72, 150 / 72)
             pix  = page.get_pixmap(matrix=mat)
             img  = Image.open(io.BytesIO(pix.tobytes("png")))
-            # Use multiple languages: English + all supported Indian languages
-            lang_str = "eng+hin+tam+tel+kan+mal+ben+mar+guj+pan+ori"
             text = pytesseract.image_to_string(img, lang=lang_str)
-            if text.strip():
-                ocr_text.append(text)
+            _doc.close()
             print(f"  OCR: page {page_num + 1}/{pages_to_ocr} done")
+            return page_num, text.strip()
 
-        result = "\n".join(ocr_text).strip()
+        # Run OCR on all pages in parallel — 10 threads
+        ocr_results = {}
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            futures = {executor.submit(ocr_page, i): i for i in range(pages_to_ocr)}
+            for future in as_completed(futures):
+                page_num, text = future.result()
+                if text:
+                    ocr_results[page_num] = text
+
+        # Reassemble in original page order
+        result = "\n".join(ocr_results[i] for i in sorted(ocr_results))
         if not result:
             raise ValueError("OCR ran but extracted no text. The PDF may contain only images or graphics.")
         return result, "ocr"
