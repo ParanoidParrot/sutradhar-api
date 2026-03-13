@@ -27,10 +27,10 @@ pc            = Pinecone(api_key=PINECONE_API_KEY)
 # ── Load config ───────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(BASE_DIR, "storytellers.json")) as f:
+with open(os.path.join(BASE_DIR, "data", "storytellers.json")) as f:
     STORYTELLERS = {s["id"]: s for s in json.load(f)["storytellers"]}
 
-with open(os.path.join(BASE_DIR, "scriptures.json")) as f:
+with open(os.path.join(BASE_DIR, "data", "scriptures.json")) as f:
     SCRIPTURES = {s["id"]: s for s in json.load(f)["scriptures"]}
 
 # ── Supported languages ───────────────────────────────────────────────────────
