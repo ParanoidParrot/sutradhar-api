@@ -7,8 +7,8 @@ import os
 import json
 
 BASE_DIR          = os.path.dirname(os.path.abspath(__file__))
-SCRIPTURES_FILE   = os.path.join(BASE_DIR, "scriptures.json")
-STORYTELLERS_FILE = os.path.join(BASE_DIR, "storytellers.json")
+SCRIPTURES_FILE   = os.path.join(BASE_DIR, "data", "scriptures.json")
+STORYTELLERS_FILE = os.path.join(BASE_DIR, "data", "storytellers.json")
 
 
 # ── Scriptures ────────────────────────────────────────────────────────────────
