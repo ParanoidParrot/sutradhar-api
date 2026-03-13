@@ -33,6 +33,19 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
+# ── Startup diagnostic ────────────────────────────────────────────────────────
+@app.on_event("startup")
+async def startup_check():
+    base     = os.path.dirname(os.path.abspath(__file__))
+    data_dir = os.path.join(base, "data")
+    print(f"[startup] BASE_DIR: {base}", flush=True)
+    print(f"[startup] BASE_DIR files: {os.listdir(base)}", flush=True)
+    print(f"[startup] data/ exists: {os.path.exists(data_dir)}", flush=True)
+    if os.path.exists(data_dir):
+        print(f"[startup] data/ contents: {os.listdir(data_dir)}", flush=True)
+    else:
+        print(f"[startup] data/ directory is MISSING", flush=True)
+
 # ── In-memory chunk assembly store ────────────────────────────────────────────
 # Maps upload_id -> { tmp_path, received_chunks, total_chunks, metadata }
 _chunk_uploads: dict = {}
