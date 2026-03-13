@@ -9,8 +9,8 @@ import uuid
 from datetime import datetime
 
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-STORE_FILE = os.path.join(BASE_DIR, "data", "document_store.json")
-JOBS_FILE  = os.path.join(BASE_DIR, "data", "jobs_store.json")
+STORE_FILE = os.path.join(BASE_DIR, "persistent", "document_store.json")
+JOBS_FILE  = os.path.join(BASE_DIR, "persistent", "jobs_store.json")
 
 
 # ── Documents ─────────────────────────────────────────────────────────────────

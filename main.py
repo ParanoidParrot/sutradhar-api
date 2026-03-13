@@ -33,18 +33,27 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
-# ── Startup diagnostic ────────────────────────────────────────────────────────
+# ── Startup — ensure persistent/ dir exists and seed config files ─────────────
 @app.on_event("startup")
 async def startup_check():
-    base     = os.path.dirname(os.path.abspath(__file__))
-    data_dir = os.path.join(base, "data")
-    print(f"[startup] BASE_DIR: {base}", flush=True)
-    print(f"[startup] BASE_DIR files: {os.listdir(base)}", flush=True)
-    print(f"[startup] data/ exists: {os.path.exists(data_dir)}", flush=True)
-    if os.path.exists(data_dir):
-        print(f"[startup] data/ contents: {os.listdir(data_dir)}", flush=True)
-    else:
-        print(f"[startup] data/ directory is MISSING", flush=True)
+    import shutil
+    base       = os.path.dirname(os.path.abspath(__file__))
+    persistent = os.path.join(base, "persistent")
+    os.makedirs(persistent, exist_ok=True)
+    print(f"[startup] persistent/ contents: {os.listdir(persistent)}", flush=True)
+
+    # Seed scriptures.json and storytellers.json from repo if not present in volume
+    for filename in ["scriptures.json", "storytellers.json"]:
+        dest = os.path.join(persistent, filename)
+        src  = os.path.join(base, filename)
+        if not os.path.exists(dest):
+            if os.path.exists(src):
+                shutil.copy(src, dest)
+                print(f"[startup] seeded {filename} from repo", flush=True)
+            else:
+                print(f"[startup] WARNING: {filename} not found in repo or persistent/", flush=True)
+        else:
+            print(f"[startup] {filename} already exists in persistent/", flush=True)
 
 # ── In-memory chunk assembly store ────────────────────────────────────────────
 # Maps upload_id -> { tmp_path, received_chunks, total_chunks, metadata }

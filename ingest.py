@@ -92,7 +92,7 @@ def extract_from_pdf(path: str) -> tuple[str, str]:
 
         # Run OCR on all pages in parallel — 10 threads
         ocr_results = {}
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             futures = {executor.submit(ocr_page, i): i for i in range(pages_to_ocr)}
             for future in as_completed(futures):
                 page_num, text = future.result()
@@ -289,7 +289,7 @@ def main():
     parser.add_argument("--seed",      action="store_true")
     args = parser.parse_args()
 
-    with open(os.path.join(BASE_DIR, "scriptures.json")) as f:
+    with open(os.path.join(BASE_DIR, "persistent", "scriptures.json")) as f:
         scriptures = {s["id"]: s for s in json.load(f)["scriptures"]}
 
     if args.seed:

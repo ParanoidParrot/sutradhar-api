@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 
 BASE_DIR       = os.path.dirname(os.path.abspath(__file__))
-ACTIVITY_FILE  = os.path.join(BASE_DIR, "data", "activity_log.json")
+ACTIVITY_FILE  = os.path.join(BASE_DIR, "persistent", "activity_log.json")
 MAX_ENTRIES    = 200
 
 

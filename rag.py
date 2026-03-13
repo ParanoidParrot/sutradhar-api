@@ -27,10 +27,10 @@ pc            = Pinecone(api_key=PINECONE_API_KEY)
 # ── Load config ───────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(BASE_DIR, "data", "storytellers.json")) as f:
+with open(os.path.join(BASE_DIR, "persistent", "storytellers.json")) as f:
     STORYTELLERS = {s["id"]: s for s in json.load(f)["storytellers"]}
 
-with open(os.path.join(BASE_DIR, "data", "scriptures.json")) as f:
+with open(os.path.join(BASE_DIR, "persistent", "scriptures.json")) as f:
     SCRIPTURES = {s["id"]: s for s in json.load(f)["scriptures"]}
 
 # ── Supported languages ───────────────────────────────────────────────────────
@@ -252,7 +252,7 @@ def ask(
         IRRELEVANCE_PHRASES = [
             "does not mention", "not mentioned", "not part of", "outside the scope",
             "not related to", "cannot answer", "no information", "not found in",
-            "beyond the scope", "not in the ramayana", "not covered", "question is unclear"
+            "beyond the scope", "not in the ramayana", "not covered"
         ]
         answer_lower = answer_en.lower()
         if any(phrase in answer_lower for phrase in IRRELEVANCE_PHRASES):
