@@ -13,7 +13,7 @@ from typing import Optional
 from dotenv import load_dotenv
 from rag import ask, speech_to_text, text_to_speech, LANGUAGE_CODES, STORYTELLERS, SCRIPTURES
 from auth import authenticate_admin, create_access_token, require_admin
-from persistent.document_store import (
+from document_store import (
     add_document, list_documents, delete_document, get_document,
     update_document, create_job, update_job, get_job
 )
