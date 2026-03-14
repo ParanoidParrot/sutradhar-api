@@ -177,8 +177,49 @@ def extract_text_with_meta(source: str, is_url: bool = False) -> dict:
         raise ValueError(f"Unsupported file type: {ext}")
 
 
+# ── Kanda detection ──────────────────────────────────────────────────────────
+import re as _re
+
+_KANDA_NAMES = [
+    "Bala Kanda", "Ayodhya Kanda", "Aranya Kanda",
+    "Kishkindha Kanda", "Sundara Kanda", "Yuddha Kanda", "Uttara Kanda",
+    "Kishkinda Kanda", "Balakanda", "Ayodhyakanda", "Aranyakanda",
+    "Kishkindhakanda", "Sundarakanda", "Yuddhakanda", "Uttarakanda",
+]
+
+_KANDA_NAME_PATTERN = "|".join(
+    _re.escape(k) for k in sorted(_KANDA_NAMES, key=len, reverse=True)
+)
+_KANDA_REGEX = _re.compile(
+    r"(?:(?:chapter|canto|sarga|book|part|section)[\s\-–—]*[\w\d]*[\s\-–—:\.]*)?"
+    r"(" + _KANDA_NAME_PATTERN + r")",
+    _re.IGNORECASE
+)
+
+_CANONICAL_KANDA = {
+    "balakanda":       "Bala Kanda",
+    "ayodhyakanda":    "Ayodhya Kanda",
+    "aranyakanda":     "Aranya Kanda",
+    "kishkindhakanda": "Kishkindha Kanda",
+    "kishkindakanda":  "Kishkindha Kanda",
+    "sundarakanda":    "Sundara Kanda",
+    "yuddhakanda":     "Yuddha Kanda",
+    "uttarakanda":     "Uttara Kanda",
+}
+
+def detect_kanda(text: str) -> str:
+    """Detect kanda name from a line of text. Returns canonical name or empty string."""
+    match = _KANDA_REGEX.search(text)
+    if not match:
+        return ""
+    raw        = match.group(1).strip().title()
+    normalised = raw.replace(" ", "").lower()
+    return _CANONICAL_KANDA.get(normalised, raw)
+
+
 # ── Chunking ──────────────────────────────────────────────────────────────────
 def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[str]:
+    """Basic chunking — returns plain text chunks."""
     words  = text.split()
     chunks = []
     start  = 0
@@ -188,6 +229,47 @@ def chunk_text(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVE
         if chunk.strip():
             chunks.append(chunk.strip())
         start = end - overlap
+    return chunks
+
+
+def chunk_text_with_kanda(text: str, chunk_size: int = CHUNK_SIZE, overlap: int = CHUNK_OVERLAP) -> list[dict]:
+    """
+    Kanda-aware chunking. Returns list of dicts with text and kanda keys.
+    Tracks current kanda as it scans through the text line by line.
+    Each chunk inherits the most recently detected kanda heading.
+    """
+    lines         = text.splitlines()
+    current_kanda = ""
+    words         = []
+    word_kandas   = []
+
+    for line in lines:
+        detected = detect_kanda(line)
+        if detected:
+            current_kanda = detected
+        line_words = line.split()
+        words.extend(line_words)
+        word_kandas.extend([current_kanda] * len(line_words))
+
+    chunks = []
+    start  = 0
+    while start < len(words):
+        end         = start + chunk_size
+        chunk_words = words[start:end]
+        chunk_str   = " ".join(chunk_words).strip()
+        if not chunk_str:
+            start = end - overlap
+            continue
+
+        # Assign kanda by majority vote within chunk
+        chunk_kandas = [k for k in word_kandas[start:end] if k]
+        kanda = max(set(chunk_kandas), key=chunk_kandas.count) if chunk_kandas else ""
+
+        chunks.append({"text": chunk_str, "kanda": kanda})
+        start = end - overlap
+
+    detected_count = sum(1 for c in chunks if c["kanda"])
+    print(f"  Kanda detection: {detected_count}/{len(chunks)} chunks assigned a kanda")
     return chunks
 
 
@@ -209,24 +291,38 @@ def embed_chunks(chunks: list[str]) -> list[list[float]]:
 
 # ── Pinecone upsert — batched ─────────────────────────────────────────────────
 def upsert_to_pinecone(
-    chunks:    list[str],
+    chunks:    list,   # list[str] or list[dict] with 'text' and 'kanda' keys
     namespace: str,
     source:    str,
     kanda:     str = "",
     topic:     str = ""
 ) -> int:
-    index   = pc.Index(PINECONE_INDEX)
-    vectors = embed_chunks(chunks)
+    index = pc.Index(PINECONE_INDEX)
+
+    # Normalise: accept both plain strings and kanda-aware dicts
+    normalised = []
+    for c in chunks:
+        if isinstance(c, dict):
+            normalised.append({
+                "text":  c.get("text", ""),
+                # Per-chunk kanda takes priority; fall back to upload-form kanda
+                "kanda": c.get("kanda") or kanda,
+            })
+        else:
+            normalised.append({"text": c, "kanda": kanda})
+
+    texts   = [c["text"] for c in normalised]
+    vectors = embed_chunks(texts)
 
     records = []
-    for chunk, vector in zip(chunks, vectors):
+    for chunk, vector in zip(normalised, vectors):
         records.append({
             "id":     str(uuid.uuid4()),
             "values": vector,
             "metadata": {
-                "text":   chunk,
+                "text":   chunk["text"],
                 "source": source,
-                "kanda":  kanda,
+                "kanda":  chunk["kanda"],
                 "topic":  topic
             }
         })

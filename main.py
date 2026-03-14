@@ -23,7 +23,7 @@ from config_store import (
     list_scriptures, get_scripture, create_scripture, update_scripture,
     list_storytellers, get_storyteller, create_storyteller, update_storyteller, delete_storyteller
 )
-from ingest import extract_text, chunk_text, upsert_to_pinecone
+from ingest import extract_text, chunk_text, chunk_text_with_kanda, upsert_to_pinecone
 
 load_dotenv()
 
@@ -196,7 +196,8 @@ def _run_ingestion(job_id, tmp_path, ext, scripture, source, kanda, topic, filen
             update_job(job_id, progress=45, message=f"Scanned PDF detected — OCR complete ({meta['total_pages']} pages)")
 
         update_job(job_id, progress=55, message="Chunking document...")
-        chunks = chunk_text(text)
+        # Use kanda-aware chunking — auto-detects chapter headings
+        chunks = chunk_text_with_kanda(text)
 
         if not chunks:
             raise ValueError(
