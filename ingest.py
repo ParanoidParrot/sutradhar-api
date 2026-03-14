@@ -289,7 +289,7 @@ def main():
     parser.add_argument("--seed",      action="store_true")
     args = parser.parse_args()
 
-    with open(os.path.join(BASE_DIR, "persistent", "scriptures.json")) as f:
+    with open(os.path.join(BASE_DIR, "persistent", "scriptures.json") if os.path.exists(os.path.join(BASE_DIR, "persistent", "scriptures.json")) else os.path.join(BASE_DIR, "scriptures.json")) as f:
         scriptures = {s["id"]: s for s in json.load(f)["scriptures"]}
 
     if args.seed:

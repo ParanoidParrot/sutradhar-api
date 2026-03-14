@@ -27,11 +27,18 @@ pc            = Pinecone(api_key=PINECONE_API_KEY)
 # ── Load config ───────────────────────────────────────────────────────────────
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-with open(os.path.join(BASE_DIR, "persistent", "storytellers.json")) as f:
-    STORYTELLERS = {s["id"]: s for s in json.load(f)["storytellers"]}
+def _load_json(filename: str) -> dict:
+    """Load from persistent/ first, fall back to repo root."""
+    persistent_path = os.path.join(BASE_DIR, "persistent", filename)
+    fallback_path   = os.path.join(BASE_DIR, filename)
+    for path in [persistent_path, fallback_path]:
+        if os.path.exists(path):
+            with open(path) as f:
+                return json.load(f)
+    raise FileNotFoundError(f"{filename} not found in persistent/ or repo root")
 
-with open(os.path.join(BASE_DIR, "persistent", "scriptures.json")) as f:
-    SCRIPTURES = {s["id"]: s for s in json.load(f)["scriptures"]}
+STORYTELLERS = {s["id"]: s for s in _load_json("storytellers.json")["storytellers"]}
+SCRIPTURES   = {s["id"]: s for s in _load_json("scriptures.json")["scriptures"]}
 
 # ── Supported languages ───────────────────────────────────────────────────────
 LANGUAGE_CODES = {
@@ -252,7 +259,7 @@ def ask(
         IRRELEVANCE_PHRASES = [
             "does not mention", "not mentioned", "not part of", "outside the scope",
             "not related to", "cannot answer", "no information", "not found in",
-            "beyond the scope", "not in the ramayana", "not covered"
+            "beyond the scope", "not in the ramayana", "not covered", "question is unclear"
         ]
         answer_lower = answer_en.lower()
         if any(phrase in answer_lower for phrase in IRRELEVANCE_PHRASES):
