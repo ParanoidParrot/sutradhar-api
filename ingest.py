@@ -181,10 +181,27 @@ def extract_text_with_meta(source: str, is_url: bool = False) -> dict:
 import re as _re
 
 _KANDA_NAMES = [
+    # Standard spaced forms
     "Bala Kanda", "Ayodhya Kanda", "Aranya Kanda",
     "Kishkindha Kanda", "Sundara Kanda", "Yuddha Kanda", "Uttara Kanda",
-    "Kishkinda Kanda", "Balakanda", "Ayodhyakanda", "Aranyakanda",
-    "Kishkindhakanda", "Sundarakanda", "Yuddhakanda", "Uttarakanda",
+    # Alternate spellings
+    "Kishkinda Kanda", "Aranya Kanda", "Yuddha Kaanda",
+    # Compound (no space) forms
+    "Balakanda", "Ayodhyakanda", "Aranyakanda",
+    "Kishkindhakanda", "Kishkindakanda", "Sundarakanda",
+    "Yuddhakanda", "Yuddhakaanda", "Uttarakanda",
+    # With Kaanda spelling
+    "Bala Kaanda", "Ayodhya Kaanda", "Aranya Kaanda",
+    "Kishkindha Kaanda", "Sundara Kaanda", "Uttara Kaanda",
+    # Sanskrit romanisation
+    "Balakāṇḍa", "Ayodhyākāṇḍa", "Araṇyakāṇḍa",
+    "Kiṣkindhākāṇḍa", "Sundarakāṇḍa", "Yuddhakāṇḍa", "Uttarakāṇḍa",
+    # Hindi transliteration variants
+    "Bal Kand", "Ayodhya Kand", "Aranya Kand",
+    "Kishkindha Kand", "Sundara Kand", "Yuddha Kand", "Uttara Kand",
+    # Number-based with kanda (e.g. "First Kanda", "Sixth Kanda")
+    "First Kanda", "Second Kanda", "Third Kanda",
+    "Fourth Kanda", "Fifth Kanda", "Sixth Kanda", "Seventh Kanda",
 ]
 
 _KANDA_NAME_PATTERN = "|".join(
@@ -197,6 +214,7 @@ _KANDA_REGEX = _re.compile(
 )
 
 _CANONICAL_KANDA = {
+    # Compound forms
     "balakanda":       "Bala Kanda",
     "ayodhyakanda":    "Ayodhya Kanda",
     "aranyakanda":     "Aranya Kanda",
@@ -204,7 +222,31 @@ _CANONICAL_KANDA = {
     "kishkindakanda":  "Kishkindha Kanda",
     "sundarakanda":    "Sundara Kanda",
     "yuddhakanda":     "Yuddha Kanda",
+    "yuddhakaanda":    "Yuddha Kanda",
     "uttarakanda":     "Uttara Kanda",
+    # Kaanda variants
+    "balakaanda":      "Bala Kanda",
+    "ayodhyakaanda":   "Ayodhya Kanda",
+    "aranyakaanda":    "Aranya Kanda",
+    "kishkindhakaanda":"Kishkindha Kanda",
+    "sundarakaanda":   "Sundara Kanda",
+    "uttarakaanda":    "Uttara Kanda",
+    # Kand variants
+    "balkand":         "Bala Kanda",
+    "ayodhyakand":     "Ayodhya Kanda",
+    "aranyakand":      "Aranya Kanda",
+    "kishkindhakand":  "Kishkindha Kanda",
+    "sundarakand":     "Sundara Kanda",
+    "yuddhakand":      "Yuddha Kanda",
+    "uttarakand":      "Uttara Kanda",
+    # Number-based
+    "firstkanda":      "Bala Kanda",
+    "secondkanda":     "Ayodhya Kanda",
+    "thirdkanda":      "Aranya Kanda",
+    "fourthkanda":     "Kishkindha Kanda",
+    "fifthkanda":      "Sundara Kanda",
+    "sixthkanda":      "Yuddha Kanda",
+    "seventhkanda":    "Uttara Kanda",
 }
 
 def detect_kanda(text: str) -> str:
