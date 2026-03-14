@@ -86,7 +86,7 @@ def embed_text(text: str) -> list[float]:
 
 
 # ── Retrieve passages from Pinecone ──────────────────────────────────────────
-def retrieve_passages(query: str, scripture: str, n_results: int = 4) -> list[dict]:
+def retrieve_passages(query: str, scripture: str, n_results: int = 8) -> list[dict]:
     index     = get_index()
     namespace = SCRIPTURES[scripture]["pinecone_namespace"]
     vector    = embed_text(query)
@@ -129,6 +129,9 @@ def generate_answer(query: str, passages: list[dict], storyteller_id: str) -> st
     user_message = (
         f"Context passages:\n\n{context}\n\n"
         f"Question: {query}\n\n"
+        f"IMPORTANT: Answer ONLY using information from the context passages above. "
+        f"Do NOT use any external knowledge or make up details not present in the passages. "
+        f"If the passages do not contain enough information to answer the question, say so clearly.\n\n"
         f"Answer as {storyteller['name']}:"
     )
 
@@ -243,7 +246,7 @@ def ask(
             query_en = translate_text(query, source_lang=lang_code, target_lang="en-IN")
 
         # Step 2 — Retrieve relevant passages (filter low-relevance)
-        RELEVANCE_THRESHOLD = 0.80
+        RELEVANCE_THRESHOLD = 0.78
         all_passages = retrieve_passages(query_en, scripture=scripture)
         passages = [p for p in all_passages if p["score"] >= RELEVANCE_THRESHOLD]
 
