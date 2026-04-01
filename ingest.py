@@ -1,6 +1,6 @@
 """
 ingest.py
-Document ingestion pipeline for Ramedha.
+Document ingestion pipeline for Sutradhar.
 Supports: PDF (digital + scanned via OCR), plain text (.txt), Word (.docx), web URLs
 
 Extraction strategy for PDFs:
@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX   = os.getenv("PINECONE_INDEX", "ramedha")
+PINECONE_INDEX   = os.getenv("PINECONE_INDEX", "sutradhar")
 BASE_DIR         = os.path.dirname(os.path.abspath(__file__))
 
 pc = Pinecone(api_key=PINECONE_API_KEY)
@@ -417,7 +417,7 @@ def seed_from_json():
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 def main():
-    parser = argparse.ArgumentParser(description="Ramedha document ingestion")
+    parser = argparse.ArgumentParser(description="Sutradhar document ingestion")
     parser.add_argument("--file",      help="Path to PDF, TXT or DOCX file")
     parser.add_argument("--url",       help="Web URL to ingest")
     parser.add_argument("--scripture", default="ramayana")

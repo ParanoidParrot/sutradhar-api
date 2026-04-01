@@ -1,4 +1,4 @@
-# Ramedha API
+# Sutradhar API
 ### Multilingual AI storyteller backend for Indian epics and scriptures
 
 ---
@@ -20,8 +20,8 @@
 
 ```bash
 # 1. Clone
-git clone https://github.com/YOUR_USERNAME/ramedha-api
-cd ramedha-api
+git clone https://github.com/YOUR_USERNAME/sutradhar-api
+cd sutradhar-api
 
 # 2. Create venv with Python 3.11
 python3.11 -m venv venv311
