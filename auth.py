@@ -1,6 +1,6 @@
 """
 auth.py
-JWT-based admin authentication for Sutradhar API.
+JWT-based admin authentication for Ramedha API.
 Admin credentials are set via environment variables.
 """
 
@@ -15,12 +15,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ── Config ────────────────────────────────────────────────────────────────────
-SECRET_KEY      = os.environ.get("JWT_SECRET_KEY", "sutradhar-secret-change-in-production")
+SECRET_KEY      = os.environ.get("JWT_SECRET_KEY", "ramedha-secret-change-in-production")
 ALGORITHM       = "HS256"
 TOKEN_EXPIRE_HR = 24
 
 ADMIN_USERNAME  = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD  = os.environ.get("ADMIN_PASSWORD", "sutradhar-admin")
+ADMIN_PASSWORD  = os.environ.get("ADMIN_PASSWORD", "ramedha-admin")
 
 pwd_context     = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer_scheme   = HTTPBearer()

@@ -1,5 +1,5 @@
 """
-main.py — Sutradhar FastAPI backend
+main.py — Ramedha FastAPI backend
 """
 
 import os
@@ -27,7 +27,7 @@ from ingest import extract_text, chunk_text, chunk_text_with_kanda, upsert_to_pi
 
 load_dotenv()
 
-app = FastAPI(title="Sutradhar API", version="1.0.0")
+app = FastAPI(title="Ramedha API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
@@ -101,7 +101,7 @@ class UpdateStorytellerRequest(BaseModel):
 # ── Health ─────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "Sutradhar API"}
+    return {"status": "ok", "service": "Ramedha API"}
 
 
 # ── Metadata ───────────────────────────────────────────────────────────────────
@@ -399,7 +399,7 @@ def clear_namespace(namespace: str, admin=Depends(require_admin)):
     try:
         from pinecone import Pinecone
         pc    = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-        index = pc.Index(os.environ.get("PINECONE_INDEX", "sutradhar"))
+        index = pc.Index(os.environ.get("PINECONE_INDEX", "ramedha"))
         index.delete(delete_all=True, namespace=namespace)
         activity_log("clear_namespace", f"Cleared Pinecone namespace '{namespace}'", actor=admin.get("sub","admin"))
         return {"message": f"Namespace '{namespace}' cleared successfully"}
@@ -500,7 +500,7 @@ def admin_stats(_admin=Depends(require_admin)):
     from pinecone import Pinecone
     try:
         pc    = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-        index = pc.Index(os.environ.get("PINECONE_INDEX", "sutradhar"))
+        index = pc.Index(os.environ.get("PINECONE_INDEX", "ramedha"))
         stats = index.describe_index_stats()
         namespaces = {ns: data.vector_count for ns, data in (stats.namespaces or {}).items()}
         docs  = list_documents()

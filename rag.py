@@ -1,6 +1,6 @@
 """
 rag.py
-Core RAG pipeline for Sutradhar API:
+Core RAG pipeline for Ramedha API:
   1. Embed query using Pinecone inference
   2. Retrieve relevant passages from Pinecone
   3. Generate answer using Sarvam-M
@@ -19,7 +19,7 @@ load_dotenv()
 # ── Clients ───────────────────────────────────────────────────────────────────
 SARVAM_API_KEY  = os.getenv("SARVAM_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX  = os.getenv("PINECONE_INDEX", "sutradhar")
+PINECONE_INDEX  = os.getenv("PINECONE_INDEX", "ramedha")
 
 sarvam_client = SarvamAI(api_subscription_key=SARVAM_API_KEY)
 pc            = Pinecone(api_key=PINECONE_API_KEY)

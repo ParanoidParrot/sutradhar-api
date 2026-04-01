@@ -1,6 +1,6 @@
 """
 setup_pinecone.py
-Creates the Pinecone index for Sutradhar. Run once before ingesting documents.
+Creates the Pinecone index for Ramedha. Run once before ingesting documents.
 Usage: python3 setup_pinecone.py
 """
 
@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX   = os.getenv("PINECONE_INDEX", "sutradhar")
+PINECONE_INDEX   = os.getenv("PINECONE_INDEX", "ramedha")
 
 def setup():
     pc = Pinecone(api_key=PINECONE_API_KEY)
